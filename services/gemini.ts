@@ -23,6 +23,21 @@ export const generateMotivationLetter = async (
     ? "Analyze the writing style, vocabulary, and formality level of the provided CV. Write the motivation letter using a Tone and Voice that matches the candidate's CV."
     : `Use a ${options.tone} tone.`;
 
+  // Determine length instruction
+  let lengthInstruction = "";
+  switch (options.length) {
+    case 'short':
+      lengthInstruction = "Keep the letter concise, approximately 200-250 words (ideal for quick applications).";
+      break;
+    case 'detailed':
+      lengthInstruction = "Write a detailed letter, approximately 400-450 words (ideal for senior/specialized roles), providing in-depth analysis of fit.";
+      break;
+    case 'standard':
+    default:
+      lengthInstruction = "Write a standard length letter, approximately 300-350 words.";
+      break;
+  }
+
   // Construct prompt based on Job Mode
   let promptText = `
 ROLE:
@@ -74,6 +89,7 @@ OPTIONAL CONTEXT:
 - Job title: ${options.jobTitle || 'the position'}
 - Company name: ${options.companyName || 'the company'}
 - Tone Instruction: ${toneInstruction}
+- Length Instruction: ${lengthInstruction}
 - Language: ${options.language}
 
 INSTRUCTIONS:
@@ -82,7 +98,7 @@ INSTRUCTIONS:
 3. Write a motivation letter that clearly connects the candidate’s background to the job requirements.
 4. Avoid clichés, generic phrases, and AI-sounding language (e.g., "I am writing to express my interest", "I was thrilled to see"). Start strong.
 5. Use clear, natural, and professional ${options.language}.
-6. Keep the letter concise but complete (approximately 3–4 paragraphs).
+6. ${lengthInstruction}
 
 STRUCTURE:
 - Introduction: interest in the role and company (mention specifics if available).

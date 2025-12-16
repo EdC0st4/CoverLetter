@@ -311,6 +311,18 @@ const FormSection: React.FC<FormSectionProps> = ({
                 onChange={(e) => handleOptionChange('language', e.target.value)}
               />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Letter Length</label>
+              <select
+                className="w-full p-2 text-sm rounded border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white"
+                value={options.length}
+                onChange={(e) => handleOptionChange('length', e.target.value)}
+              >
+                <option value="short">Short (200-250 words)</option>
+                <option value="standard">Standard (300-350 words)</option>
+                <option value="detailed">Detailed (400-450 words)</option>
+              </select>
+            </div>
           </div>
           
           <div className="mt-4">

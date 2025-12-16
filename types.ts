@@ -4,6 +4,7 @@ export interface GeneratorOptions {
   companyName: string;
   tone: 'professional' | 'enthusiastic' | 'formal' | 'match_cv';
   language: string;
+  length: 'short' | 'standard' | 'detailed';
 }
 
 export interface UploadedFile {
@@ -28,4 +29,5 @@ export const INITIAL_OPTIONS: GeneratorOptions = {
   companyName: '',
   tone: 'professional',
   language: 'English',
+  length: 'standard',
 };
