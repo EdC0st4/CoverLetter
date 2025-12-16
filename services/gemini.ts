@@ -1,7 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 import { GeneratorOptions, UploadedFile, JobMode } from '../types';
 
+// Interface for the return value including potential sources
+export interface GeneratedContent {
+  text: string;
+  webSources?: any[];
+}
+
 const getAiClient = () => {
+  // Use process.env.API_KEY as per guidelines.
+  // Assume the environment variable is pre-configured and accessible.
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
     throw new Error("API_KEY environment variable is not set");
@@ -15,7 +23,7 @@ export const generateMotivationLetter = async (
   cvText: string,
   cvFile: UploadedFile | null,
   options: GeneratorOptions
-): Promise<string> => {
+): Promise<GeneratedContent> => {
   const ai = getAiClient();
 
   // Determine tone instruction
@@ -120,7 +128,11 @@ Provide only the final motivation letter text. Do not include markdown code bloc
       throw new Error("No content generated from the model.");
     }
 
-    return response.text.trim();
+    // According to guidelines, we must extract grounding chunks if Google Search is used.
+    return {
+      text: response.text.trim(),
+      webSources: response.candidates?.[0]?.groundingMetadata?.groundingChunks
+    };
   } catch (error) {
     console.error("Error generating letter:", error);
     throw error;

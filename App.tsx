@@ -12,15 +12,20 @@ const App: React.FC = () => {
   const [cvFile, setCvFile] = useState<UploadedFile | null>(null);
   const [options, setOptions] = useState<GeneratorOptions>(INITIAL_OPTIONS);
   const [generatedLetter, setGeneratedLetter] = useState('');
+  const [webSources, setWebSources] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
     setError(null);
+    setWebSources([]);
     try {
-      const letter = await generateMotivationLetter(jobDescription, jobMode, cvText, cvFile, options);
-      setGeneratedLetter(letter);
+      const { text, webSources: sources } = await generateMotivationLetter(jobDescription, jobMode, cvText, cvFile, options);
+      setGeneratedLetter(text);
+      if (sources) {
+        setWebSources(sources);
+      }
     } catch (err: any) {
       setError(err.message || "Something went wrong while generating the letter. Please try again.");
     } finally {
@@ -86,6 +91,7 @@ const App: React.FC = () => {
               content={generatedLetter}
               isGenerating={isGenerating}
               onUpdate={setGeneratedLetter}
+              webSources={webSources}
             />
           </div>
         </div>
