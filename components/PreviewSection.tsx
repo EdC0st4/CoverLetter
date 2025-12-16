@@ -5,10 +5,9 @@ interface PreviewSectionProps {
   content: string;
   isGenerating: boolean;
   onUpdate: (newContent: string) => void;
-  webSources?: any[];
 }
 
-const PreviewSection: React.FC<PreviewSectionProps> = ({ content, isGenerating, onUpdate, webSources }) => {
+const PreviewSection: React.FC<PreviewSectionProps> = ({ content, isGenerating, onUpdate }) => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -104,26 +103,6 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({ content, isGenerating, 
              <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed whitespace-pre-wrap font-sans text-base">
                {content}
              </div>
-          )}
-
-          {webSources && webSources.length > 0 && (
-            <div className="mt-8 pt-4 border-t border-slate-100">
-              <h4 className="text-sm font-semibold text-slate-700 mb-2">Sources</h4>
-              <ul className="space-y-1">
-                {webSources.map((chunk, i) => chunk.web ? (
-                  <li key={i}>
-                    <a 
-                      href={chunk.web.uri} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-xs text-brand-600 hover:underline flex items-center gap-1"
-                    >
-                      <span className="truncate">{chunk.web.title || chunk.web.uri}</span>
-                    </a>
-                  </li>
-                ) : null)}
-              </ul>
-            </div>
           )}
         </div>
       </div>
