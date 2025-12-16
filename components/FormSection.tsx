@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { GeneratorOptions, UploadedFile, JobMode } from '../types';
-import { Briefcase, FileText, Settings, User, Upload, X, FileCheck, Link as LinkIcon, AlignLeft } from 'lucide-react';
+import { Briefcase, FileText, Settings, User, Upload, X, FileCheck, Link as LinkIcon, AlignLeft, FileType2 } from 'lucide-react';
+// @ts-ignore
 import mammoth from 'mammoth';
 
 interface FormSectionProps {
@@ -78,16 +79,14 @@ const FormSection: React.FC<FormSectionProps> = ({
       const reader = new FileReader();
       reader.onloadend = async (event) => {
         const arrayBuffer = event.target?.result as ArrayBuffer;
-        if (arrayBuffer) {
-          try {
-            const result = await mammoth.extractRawText({ arrayBuffer });
-            setCvText(result.value);
-          } catch (err) {
-            console.error("Failed to extract text from DOCX", err);
-            alert("Could not read the .docx file. Please try converting to PDF or pasting the text.");
-          } finally {
-            setExtractingText(false);
-          }
+        try {
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          setCvText(result.value);
+        } catch (err) {
+          console.error("Failed to extract text from DOCX", err);
+          alert("Could not read the .docx file. Please try converting to PDF or pasting the text.");
+        } finally {
+          setExtractingText(false);
         }
       };
       reader.readAsArrayBuffer(file);
