@@ -18,33 +18,34 @@ export const generateMotivationLetter = async (
 ): Promise<string> => {
   const ai = getAiClient();
 
-  // Determine tone instruction
   const toneInstruction = options.tone === 'match_cv'
-    ? "Analyze the writing style, vocabulary, and formality level of the provided CV. Write the motivation letter using a Tone and Voice that matches the candidate's CV."
-    : `Use a ${options.tone} tone.`;
+    ? "Analyseer de schrijfstijl, woordenschat en het niveau van formeel taalgebruik in het verstrekte CV. Schrijf de motivatiebrief in een toon en stem die perfect aansluit bij het CV van de kandidaat."
+    : `Gebruik een ${options.tone} toon (bijvoorbeeld: professioneel, enthousiast of formeel).`;
 
-  // Determine length instruction
   let lengthInstruction = "";
   switch (options.length) {
     case 'short':
-      lengthInstruction = "Keep the letter concise, approximately 200-250 words (ideal for quick applications).";
+      lengthInstruction = "Houd de brief beknopt, ongeveer 200-250 woorden.";
       break;
     case 'detailed':
-      lengthInstruction = "Write a detailed letter, approximately 400-450 words (ideal for senior/specialized roles), providing in-depth analysis of fit.";
+      lengthInstruction = "Schrijf een gedetailleerde brief van ongeveer 400-450 woorden, met een diepgaande analyse van de fit.";
       break;
     case 'standard':
     default:
-      lengthInstruction = "Write a standard length letter, approximately 300-350 words.";
+      lengthInstruction = "Schrijf een brief van standaardlengte, ongeveer 300-350 woorden.";
       break;
   }
 
-  // Construct prompt based on Job Mode
-  let promptText = `
-ROLE:
-You are a senior recruiter and professional copywriter specializing in job application letters.
+  const languageInstruction = (options.language.toLowerCase() === 'auto' || !options.language.trim())
+    ? "Analyseer de taal van de verstrekte vacature. Schrijf de motivatiebrief in diezelfde taal."
+    : `Schrijf de motivatiebrief in het ${options.language}.`;
 
-GOAL:
-Generate a high-quality, personalized, and ready-to-send motivation letter based on the provided job vacancy and CV.
+  let promptText = `
+ROL:
+Je bent een senior recruiter en professionele copywriter, gespecialiseerd in het schrijven van sollicitatiebrieven.
+
+DOEL:
+Genereer een hoogwaardige, gepersonaliseerde en verzendklare motivatiebrief op basis van de verstrekte vacature en het CV.
 
 INPUT:
 `;
@@ -53,16 +54,15 @@ INPUT:
 
   if (jobMode === 'url') {
     promptText += `
-Job Vacancy URL:
+Vacature URL:
 ${jobInput}
 
-(Please use Google Search to access and analyze the job description, requirements, and company culture from this URL).
+(Gebruik Google Search om de functiebeschrijving, vereisten en bedrijfscultuur van deze URL te analyseren).
 `;
-    // Enable Google Search tool
     tools.push({ googleSearch: {} });
   } else {
     promptText += `
-Job Vacancy:
+Vacaturetekst:
 <<<
 ${jobInput}
 >>>
@@ -71,12 +71,12 @@ ${jobInput}
 
   if (cvFile) {
     promptText += `
-Candidate CV:
-(Provided as an attachment to this message)
+CV van de kandidaat:
+(Gevoegd als bijlage bij dit bericht)
 `;
   } else {
     promptText += `
-Candidate CV:
+CV van de kandidaat:
 <<<
 ${cvText}
 >>>
@@ -84,30 +84,31 @@ ${cvText}
   }
 
   promptText += `
-OPTIONAL CONTEXT:
-- Candidate name: ${options.candidateName || 'The Candidate'}
-- Job title: ${options.jobTitle || 'the position'}
-- Company name: ${options.companyName || 'the company'}
-- Tone Instruction: ${toneInstruction}
-- Length Instruction: ${lengthInstruction}
-- Language: ${options.language}
+AANVULLENDE CONTEXT:
+- Naam kandidaat: ${options.candidateName || '[Naam]'}
+- Functietitel: ${options.jobTitle || 'deze functie'}
+- Bedrijfsnaam: ${options.companyName || 'het bedrijf'}
+- Toon instructie: ${toneInstruction}
+- Lengte instructie: ${lengthInstruction}
+- Taal instructie: ${languageInstruction}
 
-INSTRUCTIONS:
-1. Analyze the job vacancy (from text or URL) and identify key requirements and responsibilities.
-2. Analyze the CV (text or attachment) and select only the most relevant experience and skills.
-3. Write a motivation letter that clearly connects the candidate’s background to the job requirements.
-4. Avoid clichés, generic phrases, and AI-sounding language (e.g., "I am writing to express my interest", "I was thrilled to see"). Start strong.
-5. Use clear, natural, and professional ${options.language}.
-6. ${lengthInstruction}
+INSTRUCTIES:
+1. Analyseer de vacature en identificeer de belangrijkste eisen en verantwoordelijkheden.
+2. Analyseer het CV en selecteer alleen de meest relevante ervaringen en vaardigheden die aansluiten bij de vacature.
+3. Schrijf een motivatiebrief die de achtergrond van de kandidaat direct koppelt aan de behoeften van de werkgever.
+4. Vermijd clichés en standaard AI-zinnen (zoals "Met grote belangstelling schrijf ik u..."). Begin sterk en uniek.
+5. Gebruik heldere, natuurlijke en professionele taal.
+6. ${languageInstruction}
+7. ${lengthInstruction}
 
-STRUCTURE:
-- Introduction: interest in the role and company (mention specifics if available).
-- Core paragraph(s): relevant experience and skills aligned with the vacancy.
-- Motivation and added value: why this specific match works.
-- Closing: invitation for an interview.
+STRUCTUUR:
+- Inleiding: Interesse in de rol en het bedrijf (noem specifieke details indien beschikbaar).
+- Kern: Relevante ervaring en vaardigheden, afgestemd op de vacature.
+- Motivatie en toegevoegde waarde: Waarom dit de perfecte match is.
+- Afsluiting: Uitnodiging voor een gesprek.
 
 OUTPUT:
-Provide only the final motivation letter text. Do not include markdown code blocks, explanations, bullet points outside the letter flow, or placeholders like [Name]. Use the provided candidate name if available, otherwise use a generic placeholder that is easy to spot.
+Geef alleen de uiteindelijke tekst van de motivatiebrief. Geen markdown code blocks, geen uitleg, geen bulletpoints buiten de briefstroom. Gebruik de naam van de kandidaat als die beschikbaar is, anders [Naam].
 `;
 
   try {
@@ -123,22 +124,21 @@ Provide only the final motivation letter text. Do not include markdown code bloc
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: { parts }, // Use object structure for parts
+      model: 'gemini-3-flash-preview',
+      contents: { parts },
       config: {
-        // High temperature for creativity in writing, but controlled
         temperature: 0.7,
         tools: tools.length > 0 ? tools : undefined,
       }
     });
 
     if (!response.text) {
-      throw new Error("No content generated from the model.");
+      throw new Error("Geen inhoud gegenereerd door het model.");
     }
 
     return response.text.trim();
   } catch (error) {
-    console.error("Error generating letter:", error);
+    console.error("Fout bij genereren brief:", error);
     throw error;
   }
 };

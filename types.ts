@@ -27,7 +27,7 @@ export const INITIAL_OPTIONS: GeneratorOptions = {
   candidateName: '',
   jobTitle: '',
   companyName: '',
-  tone: 'professional',
-  language: 'English',
+  tone: 'match_cv',
+  language: 'Dutch',
   length: 'standard',
 };

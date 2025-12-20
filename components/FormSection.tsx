@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { GeneratorOptions, UploadedFile, JobMode } from '../types';
-import { Briefcase, FileText, Settings, User, Upload, X, FileCheck, Link as LinkIcon, AlignLeft, FileType2 } from 'lucide-react';
+import { Briefcase, FileText, Settings, User, Upload, X, FileCheck, Link as LinkIcon, AlignLeft, ChevronDown, ChevronUp } from 'lucide-react';
 // @ts-ignore
 import mammoth from 'mammoth';
 
@@ -35,6 +35,7 @@ const FormSection: React.FC<FormSectionProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [extractingText, setExtractingText] = useState(false);
+  const [isPersonalizationOpen, setIsPersonalizationOpen] = useState(false);
 
   const handleOptionChange = (field: keyof GeneratorOptions, value: string) => {
     setOptions({ ...options, [field]: value });
@@ -44,25 +45,21 @@ const FormSection: React.FC<FormSectionProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check size (e.g. 5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      alert("File is too large. Please upload a file smaller than 5MB.");
+      alert("Bestand is te groot. Upload een bestand kleiner dan 5MB.");
       return;
     }
 
     const fileType = file.type;
     const fileName = file.name.toLowerCase();
 
-    // Reset current states
     setCvFile(null);
     setCvText('');
 
-    // Handle PDF and Images (Native Support)
     if (fileType === 'application/pdf' || fileType.startsWith('image/')) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        // Remove data URL prefix
         const base64Data = base64String.split(',')[1];
         
         setCvFile({
@@ -73,7 +70,6 @@ const FormSection: React.FC<FormSectionProps> = ({
       };
       reader.readAsDataURL(file);
     } 
-    // Handle DOCX (Text Extraction via Mammoth)
     else if (fileName.endsWith('.docx') || fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       setExtractingText(true);
       const reader = new FileReader();
@@ -84,14 +80,13 @@ const FormSection: React.FC<FormSectionProps> = ({
           setCvText(result.value);
         } catch (err) {
           console.error("Failed to extract text from DOCX", err);
-          alert("Could not read the .docx file. Please try converting to PDF or pasting the text.");
+          alert("Kan het .docx bestand niet lezen. Probeer het te converteren naar PDF of plak de tekst.");
         } finally {
           setExtractingText(false);
         }
       };
       reader.readAsArrayBuffer(file);
     }
-    // Handle Text Files
     else if (fileName.endsWith('.txt') || fileType === 'text/plain') {
       const reader = new FileReader();
       reader.onloadend = (event) => {
@@ -100,10 +95,9 @@ const FormSection: React.FC<FormSectionProps> = ({
       };
       reader.readAsText(file);
     } else {
-      alert("Unsupported file type. Please upload PDF, DOCX, TXT, or Image.");
+      alert("Niet-ondersteund bestandstype. Upload PDF, DOCX, TXT of een afbeelding.");
     }
     
-    // Reset input value to allow re-uploading same file
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -112,18 +106,18 @@ const FormSection: React.FC<FormSectionProps> = ({
     setCvText('');
   };
 
-  const isJobValid = jobDescription.trim().length > 5; // Minimal check, URL or Text
+  const isJobValid = jobDescription.trim().length > 5;
   const isCvValid = cvText.trim().length > 20 || cvFile !== null;
   const isFormValid = isJobValid && isCvValid;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
-      <div className="p-6 border-b border-slate-100 bg-slate-50">
-        <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-          <Settings className="w-5 h-5 text-brand-600" />
-          Application Details
+    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col h-full transition-colors duration-300">
+      <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <Settings className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+          Sollicitatiegegevens
         </h2>
-        <p className="text-sm text-slate-500 mt-1">Provide the context for your letter.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Geef de context voor je brief.</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -131,23 +125,23 @@ const FormSection: React.FC<FormSectionProps> = ({
         {/* Job Description Input */}
         <div className="space-y-2">
            <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-slate-700 flex items-center gap-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <Briefcase className="w-4 h-4" />
-                Job Vacancy
+                Vacature
               </label>
-              <div className="flex bg-slate-100 rounded-lg p-0.5">
+              <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-0.5">
                   <button
                     onClick={() => setJobMode('text')}
-                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${jobMode === 'text' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${jobMode === 'text' ? 'bg-white dark:bg-slate-600 text-brand-600 dark:text-brand-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                   >
                     <div className="flex items-center gap-1">
                       <AlignLeft className="w-3 h-3" />
-                      Text
+                      Tekst
                     </div>
                   </button>
                   <button
                     onClick={() => setJobMode('url')}
-                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${jobMode === 'url' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${jobMode === 'url' ? 'bg-white dark:bg-slate-600 text-brand-600 dark:text-brand-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                   >
                      <div className="flex items-center gap-1">
                       <LinkIcon className="w-3 h-3" />
@@ -159,8 +153,8 @@ const FormSection: React.FC<FormSectionProps> = ({
           
           {jobMode === 'text' ? (
             <textarea
-              className="w-full h-40 p-3 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all resize-none bg-slate-50 placeholder-slate-400"
-              placeholder="Paste the job description here..."
+              className="w-full h-40 p-3 text-sm rounded-lg border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all resize-none bg-slate-50 dark:bg-slate-900 placeholder-slate-400 dark:placeholder-slate-500 text-slate-900 dark:text-slate-100"
+              placeholder="Plak hier de vacaturetekst..."
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
             />
@@ -168,14 +162,14 @@ const FormSection: React.FC<FormSectionProps> = ({
             <div className="relative">
               <input 
                 type="url" 
-                className="w-full p-3 pl-10 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all bg-slate-50 placeholder-slate-400"
+                className="w-full p-3 pl-10 text-sm rounded-lg border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all bg-slate-50 dark:bg-slate-900 placeholder-slate-400 dark:placeholder-slate-500 text-slate-900 dark:text-slate-100"
                 placeholder="https://www.linkedin.com/jobs/..."
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
               />
-              <LinkIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <p className="text-xs text-slate-500 mt-2">
-                Provide a direct link to the job posting. The AI will search for the details.
+              <LinkIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                Geef een directe link naar de vacature. De AI zal de details opzoeken.
               </p>
             </div>
           )}
@@ -184,27 +178,26 @@ const FormSection: React.FC<FormSectionProps> = ({
         {/* CV Input Section */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-slate-700 flex items-center gap-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              Your CV / Resume
+              Je CV / Resume
             </label>
             {!cvFile && !cvText && (
               <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="text-xs text-brand-600 hover:text-brand-700 font-medium flex items-center gap-1"
+                className="text-xs text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium flex items-center gap-1"
               >
                 <Upload className="w-3 h-3" />
-                Upload File
+                Upload Bestand
               </button>
             )}
-            {/* Show change button if text is present but not file (e.g. extracted text) */}
             {cvText && !cvFile && (
                <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="text-xs text-slate-500 hover:text-brand-600 font-medium flex items-center gap-1"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 font-medium flex items-center gap-1"
               >
                 <Upload className="w-3 h-3" />
-                Replace File
+                Vervang Bestand
               </button>
             )}
           </div>
@@ -218,28 +211,28 @@ const FormSection: React.FC<FormSectionProps> = ({
           />
 
           {extractingText && (
-             <div className="w-full p-4 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center gap-2 text-sm text-slate-500">
+             <div className="w-full p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <svg className="animate-spin h-4 w-4 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Reading document...
+                Document lezen...
              </div>
           )}
 
           {!extractingText && cvFile ? (
-            <div className="relative group w-full p-4 rounded-lg border border-brand-200 bg-brand-50 flex items-center gap-3">
-              <div className="p-2 bg-white rounded-md shadow-sm">
-                <FileCheck className="w-5 h-5 text-brand-600" />
+            <div className="relative group w-full p-4 rounded-lg border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-900/20 flex items-center gap-3">
+              <div className="p-2 bg-white dark:bg-slate-800 rounded-md shadow-sm">
+                <FileCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-800 truncate">{cvFile.name}</p>
-                <p className="text-xs text-slate-500">File Attached (PDF/Image)</p>
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{cvFile.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Bestand gekoppeld (PDF/Afbeelding)</p>
               </div>
               <button 
                 onClick={clearFile}
-                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
-                title="Remove file"
+                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors"
+                title="Verwijder bestand"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -247,15 +240,15 @@ const FormSection: React.FC<FormSectionProps> = ({
           ) : !extractingText ? (
             <div className="relative">
               <textarea
-                className="w-full h-40 p-3 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all resize-none bg-slate-50 placeholder-slate-400"
-                placeholder="Paste your CV text here..."
+                className="w-full h-40 p-3 text-sm rounded-lg border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all resize-none bg-slate-50 dark:bg-slate-900 placeholder-slate-400 dark:placeholder-slate-500 text-slate-900 dark:text-slate-100"
+                placeholder="Plak hier je CV tekst..."
                 value={cvText}
                 onChange={(e) => setCvText(e.target.value)}
               />
               {!cvText && (
                  <div className="absolute bottom-3 right-3 pointer-events-none opacity-50">
-                    <span className="text-xs text-slate-400 bg-white px-2 py-1 rounded border border-slate-100 shadow-sm">
-                      Or paste text above
+                    <span className="text-xs text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 px-2 py-1 rounded border border-slate-100 dark:border-slate-700 shadow-sm">
+                      Of plak tekst hierboven
                     </span>
                  </div>
               )}
@@ -263,98 +256,117 @@ const FormSection: React.FC<FormSectionProps> = ({
           ) : null}
         </div>
 
-        {/* Optional Fields */}
-        <div className="pt-4 border-t border-slate-100">
-          <div className="flex items-center gap-2 mb-4">
-            <User className="w-4 h-4 text-slate-500" />
-            <span className="text-sm font-medium text-slate-700">Personalization (Optional)</span>
-          </div>
+        {/* Optional Fields (Collapsible) */}
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
+          <button 
+            onClick={() => setIsPersonalizationOpen(!isPersonalizationOpen)}
+            className="flex items-center justify-between w-full mb-4 group"
+          >
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-brand-700 dark:group-hover:text-brand-300 transition-colors">Personalisatie (Optioneel)</span>
+            </div>
+            {isPersonalizationOpen ? (
+              <ChevronUp className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-brand-500" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-brand-500" />
+            )}
+          </button>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Your Name</label>
-              <input
-                type="text"
-                className="w-full p-2 text-sm rounded border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                placeholder="John Doe"
-                value={options.candidateName}
-                onChange={(e) => handleOptionChange('candidateName', e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Company Name</label>
-              <input
-                type="text"
-                className="w-full p-2 text-sm rounded border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                placeholder="Acme Corp"
-                value={options.companyName}
-                onChange={(e) => handleOptionChange('companyName', e.target.value)}
-              />
-            </div>
-             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Target Job Title</label>
-              <input
-                type="text"
-                className="w-full p-2 text-sm rounded border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                placeholder="Senior Developer"
-                value={options.jobTitle}
-                onChange={(e) => handleOptionChange('jobTitle', e.target.value)}
-              />
-            </div>
-             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Language</label>
-              <input
-                type="text"
-                className="w-full p-2 text-sm rounded border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                placeholder="English"
-                value={options.language}
-                onChange={(e) => handleOptionChange('language', e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Letter Length</label>
-              <select
-                className="w-full p-2 text-sm rounded border border-slate-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white"
-                value={options.length}
-                onChange={(e) => handleOptionChange('length', e.target.value)}
-              >
-                <option value="short">Short (200-250 words)</option>
-                <option value="standard">Standard (300-350 words)</option>
-                <option value="detailed">Detailed (400-450 words)</option>
-              </select>
-            </div>
-          </div>
-          
-          <div className="mt-4">
-             <label className="block text-xs font-medium text-slate-500 mb-1">Tone</label>
-             <div className="flex flex-wrap rounded-md shadow-sm" role="group">
-                {['professional', 'enthusiastic', 'formal', 'match_cv'].map((t, idx, arr) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => handleOptionChange('tone', t)}
-                    className={`px-3 py-2 text-xs font-medium border -ml-px flex-1 capitalize transition-colors first:ml-0
-                      ${idx === 0 ? 'rounded-l-lg' : ''}
-                      ${idx === arr.length - 1 ? 'rounded-r-lg' : ''}
-                      ${options.tone === t 
-                        ? 'bg-brand-50 text-brand-700 border-brand-200 z-10 ring-1 ring-brand-200' 
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+          {isPersonalizationOpen && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Je Naam</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 text-sm rounded border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-700 dark:text-white"
+                    placeholder="John Doe"
+                    value={options.candidateName}
+                    onChange={(e) => handleOptionChange('candidateName', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Bedrijfsnaam</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 text-sm rounded border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-700 dark:text-white"
+                    placeholder="Acme Corp"
+                    value={options.companyName}
+                    onChange={(e) => handleOptionChange('companyName', e.target.value)}
+                  />
+                </div>
+                 <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Doelfunctie</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 text-sm rounded border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-700 dark:text-white"
+                    placeholder="Senior Developer"
+                    value={options.jobTitle}
+                    onChange={(e) => handleOptionChange('jobTitle', e.target.value)}
+                  />
+                </div>
+                 <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Taal</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 text-sm rounded border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-700 dark:text-white"
+                    placeholder="Nederlands"
+                    value={options.language}
+                    onChange={(e) => handleOptionChange('language', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Lengte van de Brief</label>
+                  <select
+                    className="w-full p-2 text-sm rounded border border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-700 dark:text-white"
+                    value={options.length}
+                    onChange={(e) => handleOptionChange('length', e.target.value)}
                   >
-                    {t === 'match_cv' ? 'Match CV' : t}
-                  </button>
-                ))}
-             </div>
-          </div>
+                    <option value="short">Kort (200-250 woorden)</option>
+                    <option value="standard">Standaard (300-350 woorden)</option>
+                    <option value="detailed">Gedetailleerd (400-450 woorden)</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                 <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Toon</label>
+                 <div className="flex flex-wrap rounded-md shadow-sm" role="group">
+                    {[
+                      { key: 'professional', label: 'Professioneel' },
+                      { key: 'enthusiastic', label: 'Enthousiast' },
+                      { key: 'formal', label: 'Formeel' },
+                      { key: 'match_cv', label: 'Match CV' }
+                    ].map((t, idx, arr) => (
+                      <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => handleOptionChange('tone', t.key as any)}
+                        className={`px-3 py-2 text-xs font-medium border -ml-px flex-1 transition-colors first:ml-0
+                          ${idx === 0 ? 'rounded-l-lg' : ''}
+                          ${idx === arr.length - 1 ? 'rounded-r-lg' : ''}
+                          ${options.tone === t.key 
+                            ? 'bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 border-brand-200 dark:border-brand-700 z-10 ring-1 ring-brand-200 dark:ring-brand-700' 
+                            : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'}`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                 </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="p-6 bg-slate-50 border-t border-slate-200">
+      <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700">
         <button
           onClick={onGenerate}
           disabled={!isFormValid || isGenerating}
           className={`w-full py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-white font-medium transition-all shadow-md
             ${!isFormValid || isGenerating 
-              ? 'bg-slate-400 cursor-not-allowed' 
+              ? 'bg-slate-400 dark:bg-slate-600 cursor-not-allowed' 
               : 'bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 shadow-brand-500/25 active:scale-[0.98]'}`}
         >
           {isGenerating ? (
@@ -363,11 +375,11 @@ const FormSection: React.FC<FormSectionProps> = ({
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Writing your letter...
+              Je brief schrijven...
             </>
           ) : (
             <>
-              Generate Letter
+              Genereer Brief
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -375,8 +387,8 @@ const FormSection: React.FC<FormSectionProps> = ({
           )}
         </button>
         {!isFormValid && (
-           <p className="text-xs text-center text-slate-400 mt-2">
-             {jobMode === 'url' && jobDescription.length <= 5 ? 'Please enter a valid URL.' : 'Please add more details to Job and CV fields to start.'}
+           <p className="text-xs text-center text-slate-400 dark:text-slate-500 mt-2">
+             {jobMode === 'url' && jobDescription.length <= 5 ? 'Voer een geldige URL in.' : 'Voeg meer details toe aan de Vacature en CV velden om te beginnen.'}
            </p>
         )}
       </div>
